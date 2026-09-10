@@ -79,6 +79,7 @@ def dealer(hand):
             print(f"\nBLACKJACK! Dealer has {hand_score}.")
             return hand_score
         elif hand_score == 21:
+            print(f"\nDealer has {hand_score}!")
             return hand_score
 
         if hand_score <= 16:
