@@ -1,8 +1,6 @@
 import random
 
-deck = []
-
-def start():
+def starting_deck():
     suits = ["♥", "♦", "♠", "♣"]
     ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 
@@ -33,22 +31,23 @@ def deal_card(hand):
     card = deck.pop()
     hand.append(card)
 
-def play(hand):
+def player_turn(hand):
     hand_score = score_hand(hand)
+    player_blackjack = False
 
     while True:
         
 
         if hand_score > 21:
-            return hand_score
+            return hand_score, player_blackjack
 
         elif hand_score == 21 and len(hand) == 2:
             print(f"\nBLACKJACK! Player has {hand_score}.\n")
-            hand_score = score_hand(hand)
-            return hand_score
+            player_blackjack = True
+            return hand_score, player_blackjack
         elif hand_score == 21:
             print(f"\nPlayer has {hand_score}!")
-            return hand_score
+            return hand_score, player_blackjack
         
         hit_stand = input("\nHit or Stand? ")
         
@@ -62,11 +61,10 @@ def play(hand):
 
         if hit_stand.strip().lower() == "s":
             show_hand(hand)
-            hand_score = score_hand(hand)
             print(f"\nPlayer stands with {hand_score}.")
-            return hand_score
+            return hand_score, player_blackjack
 
-def dealer(hand):
+def dealer_turn(hand):
     hand_score = score_hand(hand)
     
 
@@ -89,7 +87,6 @@ def dealer(hand):
             hand_score = score_hand(hand)
             continue
         elif hand_score > 16:
-            hand_score = score_hand(hand)
             print(f"\nDealer stands with {hand_score}.")
             return hand_score
         
@@ -124,7 +121,8 @@ def score_hand(hand):
     return hand_score
 
 while True:
-    start()
+    deck = []
+    starting_deck()
 
     dealer_hand = []
     player_hand = []
@@ -138,16 +136,14 @@ while True:
 
     print("Dealer Hand:")
     show_hand(dealer_hand)
-    score_hand(dealer_hand)
 
     print("\nPlayer Hand:")
     show_hand(player_hand)
-    score_hand(player_hand)
 
-    print("\n-------------------------------------------")
+    print("\n------------- PLAYER'S TURN ---------------\n")
 
-    play(player_hand)
-    player_score = score_hand(player_hand)
+    
+    player_score, player_blackjack = player_turn(player_hand)
     if player_score > 21:
         print(f"\nPlayer busts with {player_score}!")
         print("\n================ RESULT ===================")
@@ -157,7 +153,7 @@ while True:
         print("\n------------- DEALER'S TURN ---------------\n")
         print("Dealer Hand:")
         show_hand(dealer_hand)
-        dealer(dealer_hand)
+        dealer_turn(dealer_hand)
         dealer_score = score_hand(dealer_hand)
         if dealer_score > 21:
             print("\n================ RESULT ===================")
@@ -175,4 +171,4 @@ while True:
             elif player_score == dealer_score:
                 print("\n================ RESULT ===================")
                 print(f"Push! Both finish with {player_score}.")    
-                continue
+                break
