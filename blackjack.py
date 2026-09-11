@@ -1,6 +1,6 @@
 import random
 
-def starting_deck():
+def base_deck(deck):
     suits = ["♥", "♦", "♠", "♣"]
     ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 
@@ -24,8 +24,11 @@ def starting_deck():
 
     random.shuffle(deck)
 
-def deal_card(hand):
-    hand.append(deck.pop())
+def dealer_deal_card(hand):
+    hand.append(dealer_deck.pop())
+
+def player_deal_card(hand):
+    hand.append(player_deck.pop())
 
 def player_turn(hand):
     hand_score = score_hand(hand)
@@ -48,7 +51,7 @@ def player_turn(hand):
         hit_stand = input("\nHit or Stand? ").strip().lower()
 
         if hit_stand == "h":
-            deal_card(hand)
+            player_deal_card(hand)
             show_hand(hand)
             hand_score = score_hand(hand)
             continue
@@ -78,7 +81,7 @@ def dealer_turn(hand):
             return hand_score, dealer_blackjack
 
         if hand_score <= 16:
-            deal_card(hand)
+            dealer_deal_card(hand)
             print("\nDealer draws:")
             show_hand(hand)
             hand_score = score_hand(hand)
@@ -126,81 +129,123 @@ def score_hand(hand):
     return hand_score
 
 def win_conditions(player_score, player_blackjack, dealer_score, dealer_blackjack):
+    player_wins = False
+    dealer_wins = False
+    player_bust = False
+    dealer_bust = False
 
     print("\n================ RESULT ===================")
 
     if player_score > 21:
         print(f"\nDealer wins!. Player busts with {player_score}!")
-        return
+        dealer_wins = True
+        player_bust = True
+        return player_wins, dealer_wins, player_bust, dealer_bust
 
     if dealer_score > 21:
         print(f"Player wins! Dealer busts with {dealer_score}.")
-        return
+        player_wins = True
+        dealer_bust = True
+        return player_wins, dealer_wins, player_bust, dealer_bust
 
     if player_blackjack and dealer_blackjack:
         print("Push! Both players have BLACKJACK.")
-        return
+        return player_wins, dealer_wins, player_bust, dealer_bust
 
     if player_blackjack:
         print("Player has BLACKJACK! Player wins.")
-        return
+        player_wins = True
+        return player_wins, dealer_wins, player_bust, dealer_bust
 
     if dealer_blackjack:
         print("Dealer has BLACKJACK! Dealer wins.")
-        return
+        dealer_wins = True
+        return player_wins, dealer_wins, player_bust, dealer_bust
     
     if player_score > dealer_score:
         print(f"Player wins! {player_score}")
-        return
+        player_wins = True
+        return player_wins, dealer_wins, player_bust, dealer_bust
 
     if player_score < dealer_score:
         print(f"Dealer wins! {dealer_score}")
-        return
+        dealer_wins = True
+        return player_wins, dealer_wins, player_bust, dealer_bust
 
     
 
     print(f"Push! Both players finish with {player_score}.")
+    return player_wins, dealer_wins, player_bust, dealer_bust
 
 while True:
-    deck = []
-    starting_deck()
+    dealer_deck = []
+    player_deck = []
+    player_hp = 30
+    dealer_hp = 30
 
-    dealer_hand = []
-    player_hand = []
+    base_deck(dealer_deck)
+    base_deck(player_deck)
 
-    deal_card(dealer_hand)
-    deal_card(player_hand)
-    deal_card(dealer_hand)
-    deal_card(player_hand)
+    while True:
+        dealer_hand = []
+        player_hand = []
 
-    print("\n================ BLACKJACK ================\n")
+        dealer_deal_card(dealer_hand)
+        player_deal_card(player_hand)
+        dealer_deal_card(dealer_hand)
+        player_deal_card(player_hand)
 
-    print("Dealer Hand:")
-    show_dealer(dealer_hand)
+        print("\n================ BLACKJACK ================\n")
+        print(f"Dealer HP - {dealer_hp}")
+        print(f"Player HP - {player_hp}\n")
 
-    print("\nPlayer Hand:")
-    show_hand(player_hand)
-
-    print("\n------------- PLAYER'S TURN ---------------\n")
-
-    player_score, player_blackjack = player_turn(player_hand)
-
-    dealer_score = score_hand(dealer_hand)
-    dealer_blackjack = dealer_score == 21 and len(dealer_hand) == 2
-
-    if player_score <= 21:
-        print("\n------------- DEALER'S TURN ---------------\n")
         print("Dealer Hand:")
-        show_hand(dealer_hand)
+        show_dealer(dealer_hand)
 
-        if not player_blackjack:
-            dealer_score, dealer_blackjack = dealer_turn(dealer_hand)
+        print("\nPlayer Hand:")
+        show_hand(player_hand)
 
-    win_conditions(
-        player_score,
-        player_blackjack,
-        dealer_score,
-        dealer_blackjack
-    )
+        print("\n------------- PLAYER'S TURN ---------------\n")
 
+        player_score, player_blackjack = player_turn(player_hand)
+
+        dealer_score = score_hand(dealer_hand)
+        dealer_blackjack = dealer_score == 21 and len(dealer_hand) == 2
+
+        if player_score <= 21:
+            print("\n------------- DEALER'S TURN ---------------\n")
+            print("Dealer Hand:")
+            show_hand(dealer_hand)
+
+            if not player_blackjack:
+                dealer_score, dealer_blackjack = dealer_turn(dealer_hand)
+
+        player_wins, dealer_wins, player_bust, dealer_bust = win_conditions(
+            player_score,
+            player_blackjack,
+            dealer_score,
+            dealer_blackjack
+        )
+
+        if player_wins and dealer_bust:
+            dealer_hp -= dealer_score - player_score
+            print(f"Player does {dealer_score - player_score} damage!")
+        elif player_wins:
+                dealer_hp -= player_score - dealer_score
+                print(f"Player does {player_score - dealer_score} damage!")
+        if dealer_wins and player_bust:
+            player_hp -= player_score - dealer_score
+            print(f"Dealer does {player_score - dealer_score} damage!")
+        elif dealer_wins:
+            player_hp -= dealer_score - player_score
+            print(f"Dealer does {dealer_score - player_score} damage!")
+
+        
+        if dealer_hp <= 0:
+            print("Dealer has been DEFEATED!")
+            break
+            
+        if player_hp <=0:
+            print("Player has been RESHUFFLED!")
+            break
     break
