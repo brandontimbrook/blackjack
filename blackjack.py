@@ -71,15 +71,13 @@ def p_turn(hand, deck, discard):
 
 def enemy_turn(hand, deck, discard):
     enemy_score = score_hand(hand)
-    enemy_blackjack = False
+    enemy_blackjack = is_blackjack(enemy_score, hand)
 
     while True:
-
-        if enemy_score > 21:
+        if enemy_blackjack:
             return enemy_score, enemy_blackjack
 
-        if is_blackjack(enemy_score, hand):
-            enemy_blackjack = True
+        if enemy_score > 21:
             return enemy_score, enemy_blackjack
 
         if enemy_score == 21:
@@ -106,6 +104,8 @@ def show_hidden(hand):
             print("??", end= " ")
         else:
             print(f"{card['rank']}{card['suit']}", end= " ")
+
+    print()
 
 def aces(hand):
     usable_aces = 0
@@ -209,6 +209,7 @@ while True:
         p_score, p_blackjack = p_turn(p_hand, p_deck, p_discard)
 
         enemy_score = score_hand(enemy_hand)
+        enemy_blackjack = is_blackjack(enemy_score, enemy_hand)
 
         if p_score <= 21:
             print(f"\n------------- {enemy_name}'S TURN ---------------\n")
@@ -266,23 +267,20 @@ while True:
         discard_hand(p_discard, p_hand)
         discard_hand(enemy_discard, enemy_hand)
 
-        
-        
-        #if enemy_hp <= 0:
-            #print(f"{enemy_name} has been DEFEATED!")
+        if enemy_hp <= 0:
+            print(f"{enemy_name} has been DEFEATED!")
+            new_game = input("Start a new game? ").strip().lower()
+            break
             #p_bank += 8
             #rewards(scaling special chips/common 1.2x base multiplier/common extra $1 interest on current bank at end of round/ uncommon/ rare/ epic??)
             #shop(buy special_card's/ wild for value/ choose one card from p_deck to draw to hand/ blank_card??/ remove_card from p_deck/ lock shop??)
             #enemy_hp = 50
             #enemy_name = "Ol' Smokey"
-            
-            
-        if p_hp <=0:
-            print("Player has been RESHUFFLED!")
-            new_game = input("Start a new game? ")
-            if new_game == "y":
-                continue
-            elif new_game == "n":
-                break
 
-    break
+        if p_hp <= 0:
+            print("Player has been RESHUFFLED!")
+            new_game = input("Start a new game? ").strip().lower()
+            break
+
+    if new_game == "n":
+        break
