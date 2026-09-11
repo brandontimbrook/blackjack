@@ -25,10 +25,25 @@ def base_deck(deck):
     random.shuffle(deck)
 
 def dealer_deal_card(hand):
+    if len(dealer_deck) == 0:
+        reshuffle_dealer(dealer_deck)
     hand.append(dealer_deck.pop())
+        
 
 def player_deal_card(hand):
+    if len(player_deck) == 0:
+        reshuffle_player(player_deck)
     hand.append(player_deck.pop())
+
+def reshuffle_player(deck):
+    while player_discard:
+        deck.append(player_discard.pop())
+    random.shuffle(deck)
+
+def reshuffle_dealer(deck):
+    while dealer_discard:
+        deck.append(dealer_discard.pop())
+    random.shuffle(deck)
 
 def player_turn(hand):
     hand_score = score_hand(hand)
@@ -180,15 +195,20 @@ def win_conditions(player_score, player_blackjack, dealer_score, dealer_blackjac
 while True:
     dealer_deck = []
     player_deck = []
-    player_hp = 30
-    dealer_hp = 30
+    player_hand = []
+    dealer_hand = []
+    player_discard = []
+    dealer_discard = []
+
+    dealer = "Dealer"
+
+    player_hp = 50
+    dealer_hp = 50
 
     base_deck(dealer_deck)
     base_deck(player_deck)
 
     while True:
-        dealer_hand = []
-        player_hand = []
 
         dealer_deal_card(dealer_hand)
         player_deal_card(player_hand)
@@ -240,12 +260,32 @@ while True:
             player_hp -= dealer_score - player_score
             print(f"Dealer does {dealer_score - player_score} damage!")
 
+        while player_hand:
+            player_discard.append(player_hand.pop())
+
+        while dealer_hand:
+            dealer_discard.append(dealer_hand.pop())
         
         if dealer_hp <= 0:
             print("Dealer has been DEFEATED!")
-            break
+            rewards()
+            #shop()
+            dealer_hp = 50
+            dealer = "Ol' Smokey"
+
+            while True:
+                #lvl 2
+            
             
         if player_hp <=0:
             print("Player has been RESHUFFLED!")
-            break
+            new_game = input("Start a new game? ")
+            if new_game == "y":
+                continue
+            elif new_game == "n":
+                break
+
+        
+
+
     break
