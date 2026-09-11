@@ -5,80 +5,77 @@ def starting_deck():
     ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 
     for suit in suits:
-
         for rank in ranks:
 
             if rank.isdigit():
                 value = int(rank)
 
-            elif rank.strip().lower() == "a":
+            elif rank == "A":
                 value = 11
 
             else:
                 value = 10
 
-            deck.append(
-                {
-                    "rank": rank,
-                    "suit": suit,
-                    "value": value
-                }
-            )
+            deck.append({
+                "rank": rank,
+                "suit": suit,
+                "value": value
+            })
 
     random.shuffle(deck)
 
 def deal_card(hand):
-    card = deck.pop()
-    hand.append(card)
+    hand.append(deck.pop())
 
 def player_turn(hand):
     hand_score = score_hand(hand)
     player_blackjack = False
 
     while True:
-        
 
         if hand_score > 21:
             return hand_score, player_blackjack
 
-        elif hand_score == 21 and len(hand) == 2:
-            print(f"\nBLACKJACK! Player has {hand_score}.\n")
+        if hand_score == 21 and len(hand) == 2:
             player_blackjack = True
+            print(f"\nBLACKJACK! Player has {hand_score}.\n")
             return hand_score, player_blackjack
-        elif hand_score == 21:
+
+        if hand_score == 21:
             print(f"\nPlayer has {hand_score}!")
             return hand_score, player_blackjack
-        
-        hit_stand = input("\nHit or Stand? ")
-        
-        if hit_stand.strip().lower() == "h":
+
+        hit_stand = input("\nHit or Stand? ").strip().lower()
+
+        if hit_stand == "h":
             deal_card(hand)
             show_hand(hand)
             hand_score = score_hand(hand)
-            
-            if hand_score < 21:
-                continue
+            continue
 
-        if hit_stand.strip().lower() == "s":
+        if hit_stand == "s":
             show_hand(hand)
             print(f"\nPlayer stands with {hand_score}.")
             return hand_score, player_blackjack
 
 def dealer_turn(hand):
     hand_score = score_hand(hand)
-    
+    dealer_blackjack = False
 
     while True:
 
         if hand_score > 21:
             print(f"\nDealer busts with {hand_score}!")
-            return hand_score
-        elif hand_score == 21 and len(hand) == 2:
+            return hand_score, dealer_blackjack
+
+        if hand_score == 21 and len(hand) == 2:
+            dealer_blackjack = True
             print(f"\nBLACKJACK! Dealer has {hand_score}.")
-            return hand_score
-        elif hand_score == 21:
+            return hand_score, dealer_blackjack
+
+        if hand_score == 21:
             print(f"\nDealer has {hand_score}!")
-            return hand_score
+            return hand_score, dealer_blackjack
 
         if hand_score <= 16:
             deal_card(hand)
@@ -86,9 +83,9 @@ def dealer_turn(hand):
             show_hand(hand)
             hand_score = score_hand(hand)
             continue
-        elif hand_score > 16:
-            print(f"\nDealer stands with {hand_score}.")
-            return hand_score
+
+        print(f"\nDealer stands with {hand_score}.")
+        return hand_score, dealer_blackjack
         
 def show_hand(hand):
 
@@ -120,6 +117,40 @@ def score_hand(hand):
         usable_aces -= 1
     return hand_score
 
+def win_conditions(player_score, player_blackjack, dealer_score, dealer_blackjack):
+
+    print("\n================ RESULT ===================")
+
+    if player_score > 21:
+        print(f"\nDealer wins!. Player busts with {player_score}!")
+        return
+
+    if dealer_score > 21:
+        print(f"Player wins! Dealer busts with {dealer_score}.")
+        return
+
+    if player_score > dealer_score:
+        print(f"Player wins! {player_score}")
+        return
+
+    if player_score < dealer_score:
+        print(f"Dealer wins! {dealer_score}")
+        return
+
+    if player_blackjack and dealer_blackjack:
+        print("Push! Both players have BLACKJACK.")
+        return
+
+    if player_blackjack:
+        print("Player has BLACKJACK! Player wins.")
+        return
+
+    if dealer_blackjack:
+        print("Dealer has BLACKJACK! Dealer wins.")
+        return
+
+    print(f"Push! Both players finish with {player_score}.")
+
 while True:
     deck = []
     starting_deck()
@@ -142,33 +173,23 @@ while True:
 
     print("\n------------- PLAYER'S TURN ---------------\n")
 
-    
     player_score, player_blackjack = player_turn(player_hand)
-    if player_score > 21:
-        print(f"\nPlayer busts with {player_score}!")
-        print("\n================ RESULT ===================")
-        print("Dealer wins!")
-        break
-    else:
+
+    dealer_score = score_hand(dealer_hand)
+    dealer_blackjack = dealer_score == 21 and len(dealer_hand) == 2
+
+    if player_score <= 21:
         print("\n------------- DEALER'S TURN ---------------\n")
         print("Dealer Hand:")
         show_hand(dealer_hand)
-        dealer_turn(dealer_hand)
-        dealer_score = score_hand(dealer_hand)
-        if dealer_score > 21:
-            print("\n================ RESULT ===================")
-            print(f"Player wins! {player_score}")
-            break
-        elif dealer_score <= 21:
-            if player_score > dealer_score:
-                print("\n================ RESULT ===================")
-                print(f"Player wins! {player_score}")
-                break
-            elif player_score < dealer_score:
-                print("\n================ RESULT ===================")
-                print(f"Dealer wins! {dealer_score}")
-                break
-            elif player_score == dealer_score:
-                print("\n================ RESULT ===================")
-                print(f"Push! Both finish with {player_score}.")    
-                break
+
+        dealer_score, dealer_blackjack = dealer_turn(dealer_hand)
+
+    win_conditions(
+        player_score,
+        player_blackjack,
+        dealer_score,
+        dealer_blackjack
+    )
+
+    break
