@@ -94,6 +94,14 @@ def show_hand(hand):
 
     print()
 
+def show_dealer(hand):
+
+    for index, card in enumerate(hand):
+        if index == 0:
+            print("??", end= " ")
+        else:
+            print(f"{card['rank']}{card['suit']}", end= " ")
+
 def aces(hand):
     usable_aces = 0
 
@@ -129,14 +137,6 @@ def win_conditions(player_score, player_blackjack, dealer_score, dealer_blackjac
         print(f"Player wins! Dealer busts with {dealer_score}.")
         return
 
-    if player_score > dealer_score:
-        print(f"Player wins! {player_score}")
-        return
-
-    if player_score < dealer_score:
-        print(f"Dealer wins! {dealer_score}")
-        return
-
     if player_blackjack and dealer_blackjack:
         print("Push! Both players have BLACKJACK.")
         return
@@ -148,6 +148,16 @@ def win_conditions(player_score, player_blackjack, dealer_score, dealer_blackjac
     if dealer_blackjack:
         print("Dealer has BLACKJACK! Dealer wins.")
         return
+    
+    if player_score > dealer_score:
+        print(f"Player wins! {player_score}")
+        return
+
+    if player_score < dealer_score:
+        print(f"Dealer wins! {dealer_score}")
+        return
+
+    
 
     print(f"Push! Both players finish with {player_score}.")
 
@@ -166,7 +176,7 @@ while True:
     print("\n================ BLACKJACK ================\n")
 
     print("Dealer Hand:")
-    show_hand(dealer_hand)
+    show_dealer(dealer_hand)
 
     print("\nPlayer Hand:")
     show_hand(player_hand)
@@ -183,7 +193,8 @@ while True:
         print("Dealer Hand:")
         show_hand(dealer_hand)
 
-        dealer_score, dealer_blackjack = dealer_turn(dealer_hand)
+        if not player_blackjack:
+            dealer_score, dealer_blackjack = dealer_turn(dealer_hand)
 
     win_conditions(
         player_score,
