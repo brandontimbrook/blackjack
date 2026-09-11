@@ -24,86 +24,73 @@ def base_deck(deck):
 
     random.shuffle(deck)
 
-def dealer_deal_card(hand):
-    if len(dealer_deck) == 0:
-        reshuffle_dealer(dealer_deck)
-    hand.append(dealer_deck.pop())
-        
+def deal_card(hand, deck, discard):
+    if len(deck) == 0:
+        reshuffle(deck, discard)
+    hand.append(deck.pop())
 
-def player_deal_card(hand):
-    if len(player_deck) == 0:
-        reshuffle_player(player_deck)
-    hand.append(player_deck.pop())
+def discard_hand(discard, hand):
+    while hand:
+        discard.append(hand.pop())
 
-def reshuffle_player(deck):
-    while player_discard:
-        deck.append(player_discard.pop())
+def reshuffle(deck, discard):
+    while discard:
+        deck.append(discard.pop())
     random.shuffle(deck)
 
-def reshuffle_dealer(deck):
-    while dealer_discard:
-        deck.append(dealer_discard.pop())
-    random.shuffle(deck)
-
-def player_turn(hand):
-    hand_score = score_hand(hand)
-    player_blackjack = False
+def p_turn(hand, deck, discard):
+    p_score = score_hand(hand)
+    p_blackjack = False
 
     while True:
 
-        if hand_score > 21:
-            return hand_score, player_blackjack
+        if p_score > 21:
+            return p_score, p_blackjack
 
-        if hand_score == 21 and len(hand) == 2:
-            player_blackjack = True
-            print(f"\nBLACKJACK! Player has {hand_score}.\n")
-            return hand_score, player_blackjack
+        if is_blackjack(p_score, hand):
+            p_blackjack = True
+            print(f"\nBLACKJACK! Player has {p_score}.\n")
+            return p_score, p_blackjack
 
-        if hand_score == 21:
-            print(f"\nPlayer has {hand_score}!")
-            return hand_score, player_blackjack
+        if p_score == 21:
+            print(f"\nPlayer has {p_score}!")
+            return p_score, p_blackjack
 
         hit_stand = input("\nHit or Stand? ").strip().lower()
 
         if hit_stand == "h":
-            player_deal_card(hand)
+            deal_card(hand, deck, discard)
             show_hand(hand)
-            hand_score = score_hand(hand)
+            p_score = score_hand(hand)
             continue
 
         if hit_stand == "s":
             show_hand(hand)
-            print(f"\nPlayer stands with {hand_score}.")
-            return hand_score, player_blackjack
+            print(f"\nPlayer stands with {p_score}.")
+            return p_score, p_blackjack
 
-def dealer_turn(hand):
-    hand_score = score_hand(hand)
-    dealer_blackjack = False
+def enemy_turn(hand, deck, discard):
+    enemy_score = score_hand(hand)
+    enemy_blackjack = False
 
     while True:
 
-        if hand_score > 21:
-            print(f"\nDealer busts with {hand_score}!")
-            return hand_score, dealer_blackjack
+        if enemy_score > 21:
+            return enemy_score, enemy_blackjack
 
-        if hand_score == 21 and len(hand) == 2:
-            dealer_blackjack = True
-            print(f"\nBLACKJACK! Dealer has {hand_score}.")
-            return hand_score, dealer_blackjack
+        if is_blackjack(enemy_score, hand):
+            enemy_blackjack = True
+            return enemy_score, enemy_blackjack
 
-        if hand_score == 21:
-            print(f"\nDealer has {hand_score}!")
-            return hand_score, dealer_blackjack
+        if enemy_score == 21:
+            return enemy_score, enemy_blackjack
 
-        if hand_score <= 16:
-            dealer_deal_card(hand)
-            print("\nDealer draws:")
-            show_hand(hand)
-            hand_score = score_hand(hand)
+        if enemy_score <= 16:
+            deal_card(hand, deck, discard)
+            enemy_score = score_hand(hand)
             continue
 
-        print(f"\nDealer stands with {hand_score}.")
-        return hand_score, dealer_blackjack
+        return enemy_score, enemy_blackjack
         
 def show_hand(hand):
 
@@ -112,7 +99,7 @@ def show_hand(hand):
 
     print()
 
-def show_dealer(hand):
+def show_hidden(hand):
 
     for index, card in enumerate(hand):
         if index == 0:
@@ -143,149 +130,159 @@ def score_hand(hand):
         usable_aces -= 1
     return hand_score
 
-def win_conditions(player_score, player_blackjack, dealer_score, dealer_blackjack):
-    player_wins = False
-    dealer_wins = False
-    player_bust = False
-    dealer_bust = False
+def is_blackjack(score, hand):
+    return score == 21 and len(hand) == 2
 
-    print("\n================ RESULT ===================")
+def win_conditions(p_score, p_blackjack, enemy_score, enemy_blackjack):
+    p_wins = False
+    enemy_wins = False
+    p_bust = False
+    enemy_bust = False
 
-    if player_score > 21:
-        print(f"\nDealer wins!. Player busts with {player_score}!")
-        dealer_wins = True
-        player_bust = True
-        return player_wins, dealer_wins, player_bust, dealer_bust
+    if p_score > 21:
+        enemy_wins = True
+        p_bust = True
+        return p_wins, enemy_wins, p_bust, enemy_bust
 
-    if dealer_score > 21:
-        print(f"Player wins! Dealer busts with {dealer_score}.")
-        player_wins = True
-        dealer_bust = True
-        return player_wins, dealer_wins, player_bust, dealer_bust
+    if enemy_score > 21:
+        p_wins = True
+        enemy_bust = True
+        return p_wins, enemy_wins, p_bust, enemy_bust
 
-    if player_blackjack and dealer_blackjack:
-        print("Push! Both players have BLACKJACK.")
-        return player_wins, dealer_wins, player_bust, dealer_bust
+    if p_blackjack and enemy_blackjack:
+        return p_wins, enemy_wins, p_bust, enemy_bust
 
-    if player_blackjack:
-        print("Player has BLACKJACK! Player wins.")
-        player_wins = True
-        return player_wins, dealer_wins, player_bust, dealer_bust
+    if p_blackjack:
+        p_wins = True
+        return p_wins, enemy_wins, p_bust, enemy_bust
 
-    if dealer_blackjack:
-        print("Dealer has BLACKJACK! Dealer wins.")
-        dealer_wins = True
-        return player_wins, dealer_wins, player_bust, dealer_bust
+    if enemy_blackjack:
+        enemy_wins = True
+        return p_wins, enemy_wins, p_bust, enemy_bust
     
-    if player_score > dealer_score:
-        print(f"Player wins! {player_score}")
-        player_wins = True
-        return player_wins, dealer_wins, player_bust, dealer_bust
+    if p_score > enemy_score:
+        p_wins = True
+        return p_wins, enemy_wins, p_bust, enemy_bust
 
-    if player_score < dealer_score:
-        print(f"Dealer wins! {dealer_score}")
-        dealer_wins = True
-        return player_wins, dealer_wins, player_bust, dealer_bust
+    if p_score < enemy_score:
+        enemy_wins = True
+        return p_wins, enemy_wins, p_bust, enemy_bust
 
-    
-
-    print(f"Push! Both players finish with {player_score}.")
-    return player_wins, dealer_wins, player_bust, dealer_bust
+    return p_wins, enemy_wins, p_bust, enemy_bust
 
 while True:
-    dealer_deck = []
-    player_deck = []
-    player_hand = []
-    dealer_hand = []
-    player_discard = []
-    dealer_discard = []
 
-    dealer = "Dealer"
+    enemy_deck = []
+    p_deck = []
+    p_hand = []
+    enemy_hand = []
+    p_discard = []
+    enemy_discard = []
 
-    player_hp = 50
-    dealer_hp = 50
+    enemy_name = "Casino Dealer"
 
-    base_deck(dealer_deck)
-    base_deck(player_deck)
+    p_hp = 30
+    enemy_hp = 30
+
+    base_deck(enemy_deck)
+    base_deck(p_deck)
 
     while True:
 
-        dealer_deal_card(dealer_hand)
-        player_deal_card(player_hand)
-        dealer_deal_card(dealer_hand)
-        player_deal_card(player_hand)
+        deal_card(enemy_hand, enemy_deck, enemy_discard)
+        deal_card(p_hand, p_deck, p_discard)
+        deal_card(enemy_hand, enemy_deck, enemy_discard)
+        deal_card(p_hand, p_deck, p_discard)
 
         print("\n================ BLACKJACK ================\n")
-        print(f"Dealer HP - {dealer_hp}")
-        print(f"Player HP - {player_hp}\n")
+        print(f"{enemy_name} HP - {enemy_hp}")
+        print(f"Player HP - {p_hp}\n")
 
-        print("Dealer Hand:")
-        show_dealer(dealer_hand)
+        print(f"{enemy_name} Hand:")
+        show_hidden(enemy_hand)
 
         print("\nPlayer Hand:")
-        show_hand(player_hand)
+        show_hand(p_hand)
 
         print("\n------------- PLAYER'S TURN ---------------\n")
 
-        player_score, player_blackjack = player_turn(player_hand)
+        p_score, p_blackjack = p_turn(p_hand, p_deck, p_discard)
 
-        dealer_score = score_hand(dealer_hand)
-        dealer_blackjack = dealer_score == 21 and len(dealer_hand) == 2
+        enemy_score = score_hand(enemy_hand)
 
-        if player_score <= 21:
-            print("\n------------- DEALER'S TURN ---------------\n")
-            print("Dealer Hand:")
-            show_hand(dealer_hand)
+        if p_score <= 21:
+            print(f"\n------------- {enemy_name}'S TURN ---------------\n")
+            print(f"{enemy_name} Hand:")
+            show_hand(enemy_hand)
 
-            if not player_blackjack:
-                dealer_score, dealer_blackjack = dealer_turn(dealer_hand)
+            if not p_blackjack:
+                if enemy_score <= 16:
+                    print(f"\n{enemy_name} draws:")
+                enemy_score, enemy_blackjack = enemy_turn(enemy_hand, enemy_deck, enemy_discard)
+                show_hand(enemy_hand)
+                if enemy_score > 21:
+                    print(f"\n{enemy_name} busts with {enemy_score}!")
+                
+                elif enemy_score == 21:
+                    print(f"\n{enemy_name} has {enemy_score}!")
+                else:
+                    print(f"\n{enemy_name} stands with {enemy_score}.")
+                
 
-        player_wins, dealer_wins, player_bust, dealer_bust = win_conditions(
-            player_score,
-            player_blackjack,
-            dealer_score,
-            dealer_blackjack
+        p_wins, enemy_wins, p_bust, enemy_bust = win_conditions(
+            p_score,
+            p_blackjack,
+            enemy_score,
+            enemy_blackjack
         )
+        print("\n================ RESULT ===================")
 
-        if player_wins and dealer_bust:
-            dealer_hp -= dealer_score - player_score
-            print(f"Player does {dealer_score - player_score} damage!")
-        elif player_wins:
-                dealer_hp -= player_score - dealer_score
-                print(f"Player does {player_score - dealer_score} damage!")
-        if dealer_wins and player_bust:
-            player_hp -= player_score - dealer_score
-            print(f"Dealer does {player_score - dealer_score} damage!")
-        elif dealer_wins:
-            player_hp -= dealer_score - player_score
-            print(f"Dealer does {dealer_score - player_score} damage!")
+        if p_bust:
+            print(f"\n{enemy_name} wins!. Player busts with {p_score}!")
+        elif enemy_bust:
+            print(f"Player wins! {enemy_name} busts with {enemy_score}.")
+        elif p_blackjack and enemy_blackjack:
+            print("Push! Both players have BLACKJACK.")
+        elif p_blackjack:
+            print("Player has BLACKJACK! Player wins.")
+        elif enemy_blackjack:
+            print(f"{enemy_name} has BLACKJACK! {enemy_name} wins.")
+        elif p_score > enemy_score:
+            print(f"Player wins! {p_score}")
+        elif p_score < enemy_score:
+            print(f"{enemy_name} wins! {enemy_score}")
+        else:
+            print(f"Push! Both players finish with {p_score}.")
 
-        while player_hand:
-            player_discard.append(player_hand.pop())
+        damage = abs(p_score - enemy_score)
 
-        while dealer_hand:
-            dealer_discard.append(dealer_hand.pop())
+        if p_wins:
+            enemy_hp -= damage
+            print(f"Player does {damage} damage!")
+        elif enemy_wins:
+            p_hp -= damage
+            print(f"{enemy_name} does {damage} damage!")
+
+        discard_hand(p_discard, p_hand)
+        discard_hand(enemy_discard, enemy_hand)
+
         
-        if dealer_hp <= 0:
-            print("Dealer has been DEFEATED!")
-            rewards()
-            #shop()
-            dealer_hp = 50
-            dealer = "Ol' Smokey"
-
-            while True:
-                #lvl 2
+        
+        #if enemy_hp <= 0:
+            #print(f"{enemy_name} has been DEFEATED!")
+            #p_bank += 8
+            #rewards(scaling special chips/common 1.2x base multiplier/common extra $1 interest on current bank at end of round/ uncommon/ rare/ epic??)
+            #shop(buy special_card's/ wild for value/ choose one card from p_deck to draw to hand/ blank_card??/ remove_card from p_deck/ lock shop??)
+            #enemy_hp = 50
+            #enemy_name = "Ol' Smokey"
             
             
-        if player_hp <=0:
+        if p_hp <=0:
             print("Player has been RESHUFFLED!")
             new_game = input("Start a new game? ")
             if new_game == "y":
                 continue
             elif new_game == "n":
                 break
-
-        
-
 
     break
